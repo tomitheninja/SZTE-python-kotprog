@@ -1,0 +1,8 @@
+{
+    "python.testing.pytestArgs": [
+        "szte_python_kotprog"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.formatting.provider": "none"
+}
