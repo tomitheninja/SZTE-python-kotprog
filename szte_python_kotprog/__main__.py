@@ -2,29 +2,37 @@
 
 import json
 import sys
+import pickle
+import logging
+
 import discord
 from discord.ext import commands
-import pickle
+
+from szte_python_kotprog.ui.product import ProductEditModal
 
 from .cogs.data_store import DataStoreCog
 from .cogs.seller_profile import SellerProfileCog
+from .cogs.buyer_profile import BuyerProfileCog
+
+discord.utils.setup_logging()
+
 
 if len(sys.argv) < 2:
-    print("Nincs megadva fájlnév! (Alapértelmezett: config.json)")
+    logging.warning("Nincs megadva fájlnév! (Alapértelmezett: config.json)")
     sys.argv.append("config.json")
 
 try:
     with open(sys.argv[1], "r", encoding="UTF-8") as f:
-        data = json.load(f)
+        config: dict = json.load(f)
 except FileNotFoundError:
-    print("A megadott fájl nem létezik!")
+    logging.error(f"A megadott konfigurációs fájl nem létezik! [{sys.argv[1]}]")
     sys.exit(1)
 except json.JSONDecodeError:
-    print("A megadott fájl nem JSON formátumú!")
+    logging.error("A megadott fájl nem JSON formátumú!")
     sys.exit(1)
 
-if data.get("dc_token") is None or data.get("dc_token").strip() == "":
-    print("A megadott fájl nem tartalmazza a DC API kulcsot!")
+if config.get("dc_token") is None or config.get("dc_token").strip() == "":
+    logging.error("A megadott fájl nem tartalmazza a DC API kulcsot!")
     sys.exit(1)
 
 intent = discord.Intents.default()
@@ -32,27 +40,36 @@ intent.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=intent)
 
-data_store_cog = None
+data_store = None
 try:
-    with open(data.get("pickle"), "rb") as f:
-        data_store_cog = pickle.load(f)
+    with open(config.get("pickle", "data.pickle"), "rb") as f:
+        data_store = pickle.load(f)
 except FileNotFoundError:
-    print("A megadott pickle fájl nem létezik! létrehozok egy újat!")
+    logging.warning("A megadott pickle fájl nem létezik! létrehozok egy újat!")
 except pickle.UnpicklingError:
-    print("A megadott pickle fájl nem pickle formátumú!")
+    logging.error("A megadott pickle fájl nem pickle formátumú!")
     sys.exit(1)
+except EOFError:
+    logging.error("Sérült pickle fájl!")
+    sys.exit(1)
+    
+# @bot.hybrid_command(name="test")
+# async def test(ctx: commands.Context):
+#     await ctx.interaction.response.send_modal(ProductEditModal(lambda x: None))
+
 
 @bot.event
 async def on_ready():
     """Indulás után a parancs fa szinkronizálása"""
-    if data_store_cog is not None:
-        bot.add_cog(data_store_cog)
-    else:
-        await bot.add_cog(DataStoreCog(bot))
-    await bot.add_cog(SellerProfileCog(bot))
-    print("Bot is starting sync...")
+    if (bot.get_cog("DataStoreCog") is None):
+        await bot.add_cog(DataStoreCog(bot, config, data_store))
+    if (bot.get_cog("SellerProfileCog") is None):
+        await bot.add_cog(SellerProfileCog(bot))
+    if (bot.get_cog("BuyerProfileCog") is None):
+        await bot.add_cog(BuyerProfileCog(bot))
+    logging.info("Bot is starting sync...")
     await bot.tree.sync()
-    print("Bot is ready!")
+    logging.info("Bot is ready!")
 
 
-bot.run(data["dc_token"])
+bot.run(config["dc_token"], log_handler=None)

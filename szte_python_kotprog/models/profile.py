@@ -15,5 +15,8 @@ class Profile:
         self.seller = seller
 
     def __str__(self) -> str:
-        return f"{self.buyer}\n{self.seller}"
+        return f"{self.buyer}-{self.seller}"
+    
+    def __repr__(self) -> str:
+        return self.__str__()
     
