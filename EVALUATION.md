@@ -1,5 +1,24 @@
 # Értékelés
 
+## Projected evaluation
+
+| Criteria                        | Score obtainable | Score projected | Score achieved |
+|:------------------------------- | ----------------:| ---------------:| --------------:|
+| Core Features                   |                4 |               3 |                |
+| Error Handling                  |                2 |               1 |                |
+| User Interface                  |                2 |               2 |                |
+| Modularity and Organization     |                2 |               2 |                |
+| Inheritance and Polymorphism    |                2 |               2 |                |
+| Readability and Naming          |                2 |               1 |                |
+| Comments and Documentation      |                1 |               0 |                |
+| Formatting and Styling          |                1 |               1 |                |
+| Packaging and Installation      |                1 |               1 |                |
+| Documentation and Accessibility |                1 |               1 |                |
+| Test Coverage                   |                1 |               0 |                |
+| Test Quality                    |                1 |               0 |                |
+| Creativity and Originality      |                2 |               2 |                |
+| **Summary**                     |           **22** |          **16** |                |
+
 ## Functionality (8 points)
 
 ### Core Features (4 points): 

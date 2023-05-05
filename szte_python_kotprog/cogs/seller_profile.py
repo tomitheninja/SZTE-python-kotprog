@@ -1,4 +1,4 @@
-"""Eladói profil modul"""
+"""Seller profile cog"""
 
 from discord.ext import commands
 import discord
@@ -9,20 +9,22 @@ from szte_python_kotprog.ui.seller_profile import SellerProfileEmbed, SellerProf
 
 
 class SellerProfileCog(commands.Cog):
-    """Fogaskerék az eladói profilhoz"""
+    """Seller profile cog"""
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
 
     @commands.hybrid_command(name="eladói-profil")
     async def profile(self, ctx: commands.Context):
-        """Eladói profil"""
+        """Render seller profile from command"""
         await self._profile(ctx.author.id, ctx.send)
 
     async def profile_interaction(self, interaction: discord.Interaction):
+        """Render seller profile from interaction"""
         await self._profile(interaction.user.id, interaction.response.send_message)
 
     async def _profile(self, user_id: int, send: callable):
+        """Render seller profile"""
         data_store: DataStoreCog = self.bot.get_cog("DataStoreCog")
         if data_store is not None:
             profile = data_store.profiles.get(user_id)
@@ -30,11 +32,7 @@ class SellerProfileCog(commands.Cog):
             if seller is not None:
                 await send(
                     view=SellerProfileView(
-                        self.bot,
-                        True,
-                        seller.alias,
-                        seller.counties,
-                        seller.products
+                        self.bot, True, seller.alias, seller.counties, seller.products
                     ),
                     embed=SellerProfileEmbed(
                         True, seller.alias, seller.counties, seller.products
@@ -51,13 +49,22 @@ class SellerProfileCog(commands.Cog):
     async def edit_profile(
         self, interaction: discord.Interaction, name: str, counties: list[County]
     ):
+        """Edit seller profile"""
         data_store: DataStoreCog = self.bot.get_cog("DataStoreCog")
         if data_store is None:
             return
         data_store.save_seller_profile(interaction.user.id, name, counties)
         await self.profile_interaction(interaction)
-        
-    async def edit_product(self, interaction: discord.Interaction, name: str, description: str, price: int, quantity: int):
+
+    async def edit_product(
+        self,
+        interaction: discord.Interaction,
+        name: str,
+        description: str,
+        price: int,
+        quantity: int,
+    ):
+        """Edit product (forward to data store and reply)"""
         data_store: DataStoreCog = self.bot.get_cog("DataStoreCog")
         if data_store is None:
             return
@@ -73,8 +80,9 @@ class SellerProfileCog(commands.Cog):
             view=ProductManageView(self.bot, seller.products),
             ephemeral=True,
         )
-        
+
     async def delete_products(self, interaction: discord.Interaction, names: list[str]):
+        """Delete products (forward to data store and reply)"""
         data_store: DataStoreCog = self.bot.get_cog("DataStoreCog")
         if data_store is None:
             return

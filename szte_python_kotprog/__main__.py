@@ -1,4 +1,4 @@
-"""Belépési pont"""
+"""Entry point"""
 
 import json
 import sys
@@ -7,8 +7,9 @@ import logging
 
 import discord
 from discord.ext import commands
+from szte_python_kotprog.cogs.contact import ContactCog
 
-from szte_python_kotprog.ui.product import ProductEditModal
+from szte_python_kotprog.cogs.search import SearchCog
 
 from .cogs.data_store import DataStoreCog
 from .cogs.seller_profile import SellerProfileCog
@@ -22,10 +23,10 @@ if len(sys.argv) < 2:
     sys.argv.append("config.json")
 
 try:
-    with open(sys.argv[1], "r", encoding="UTF-8") as f:
-        config: dict = json.load(f)
+    with open(sys.argv[1], "r", encoding="UTF-8") as file:
+        config: dict = json.load(file)
 except FileNotFoundError:
-    logging.error(f"A megadott konfigurációs fájl nem létezik! [{sys.argv[1]}]")
+    logging.error("A megadott konfigurációs fájl nem létezik! [%s]", sys.argv[1])
     sys.exit(1)
 except json.JSONDecodeError:
     logging.error("A megadott fájl nem JSON formátumú!")
@@ -38,12 +39,13 @@ if config.get("dc_token") is None or config.get("dc_token").strip() == "":
 intent = discord.Intents.default()
 intent.message_content = True
 
-bot = commands.Bot(command_prefix="!", intents=intent)
+bot = commands.Bot(command_prefix=config.get("prefix", "!"), intents=intent)
 
+# pylint: disable=invalid-name
 data_store = None
 try:
-    with open(config.get("pickle", "data.pickle"), "rb") as f:
-        data_store = pickle.load(f)
+    with open(config.get("pickle", "data.pickle"), "rb") as file:
+        data_store = pickle.load(file)
 except FileNotFoundError:
     logging.warning("A megadott pickle fájl nem létezik! létrehozok egy újat!")
 except pickle.UnpicklingError:
@@ -52,7 +54,7 @@ except pickle.UnpicklingError:
 except EOFError:
     logging.error("Sérült pickle fájl!")
     sys.exit(1)
-    
+
 # @bot.hybrid_command(name="test")
 # async def test(ctx: commands.Context):
 #     await ctx.interaction.response.send_modal(ProductEditModal(lambda x: None))
@@ -60,13 +62,17 @@ except EOFError:
 
 @bot.event
 async def on_ready():
-    """Indulás után a parancs fa szinkronizálása"""
-    if (bot.get_cog("DataStoreCog") is None):
+    """After bot is ready, sync the tree and add cogs"""
+    if bot.get_cog("DataStoreCog") is None:
         await bot.add_cog(DataStoreCog(bot, config, data_store))
-    if (bot.get_cog("SellerProfileCog") is None):
+    if bot.get_cog("SellerProfileCog") is None:
         await bot.add_cog(SellerProfileCog(bot))
-    if (bot.get_cog("BuyerProfileCog") is None):
+    if bot.get_cog("BuyerProfileCog") is None:
         await bot.add_cog(BuyerProfileCog(bot))
+    if bot.get_cog("SearchCog") is None:
+        await bot.add_cog(SearchCog(bot))
+    if bot.get_cog("ContactCog") is None:
+        await bot.add_cog(ContactCog(bot))
     logging.info("Bot is starting sync...")
     await bot.tree.sync()
     logging.info("Bot is ready!")

@@ -16,7 +16,9 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "setuptools>=45.0",
-        "discord.py==2.2.2"
+        "discord.py==2.2.2",
+        "fuzzywuzzy==0.18.0",
+        "python-Levenshtein==0.21.0",
     ],
     classifiers=[
         "Environment :: No Input/Output (Daemon)",
